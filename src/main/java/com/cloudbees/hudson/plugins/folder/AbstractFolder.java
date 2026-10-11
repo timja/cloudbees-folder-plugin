@@ -97,6 +97,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.model.DirectlyModifiableTopLevelItemGroup;
 import jenkins.model.Jenkins;
+import jenkins.persistence.RemoteItemGroup;
 import jenkins.model.ModelObjectWithChildren;
 import jenkins.model.ProjectNamingStrategy;
 import jenkins.model.TransientActionFactory;
@@ -144,7 +145,8 @@ public abstract class AbstractFolder<I extends TopLevelItem> extends AbstractIte
                 StaplerFallback,
                 ModelObjectWithChildren,
                 StaplerOverridable,
-                IconSpec {
+                IconSpec,
+                RemoteItemGroup {
 
     /**
      * Our logger.
@@ -399,7 +401,23 @@ public abstract class AbstractFolder<I extends TopLevelItem> extends AbstractIte
         if (items.containsKey(name)) {
             throw new IllegalArgumentException("already an item '" + name + "'");
         }
-        itemsPut(item.getName(), item);
+        itemsPut(name, item);
+    }
+
+    /**
+     * Adds a child another controller created, without reloading this folder and its other children
+     * (cloud-native Target 15). It was loaded with {@link Items#load}, which named it with {@link #getItemName}.
+     */
+    @Restricted(Beta.class)
+    @Override
+    @SuppressWarnings("unchecked")
+    public void addRemotelyCreated(@NonNull TopLevelItem item) throws IOException {
+        if (!item.getParent().equals(this)) {
+            throw new IllegalArgumentException(item + " is not a child of " + this);
+        }
+        synchronized (this) {
+            addLoadedChild((I) item, item.getName());
+        }
     }
 
     /**
