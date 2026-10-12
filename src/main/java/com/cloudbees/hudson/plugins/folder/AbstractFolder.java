@@ -449,12 +449,16 @@ public abstract class AbstractFolder<I extends TopLevelItem> extends AbstractIte
             items = loadChildren(this, getJobsDir(), item -> {
                 String fullName = item.getFullName();
                 t.setName("Loading job " + fullName);
-                float percentage = 100.0f * jobEncountered.incrementAndGet() / Math.max(1, jobTotal.get());
+                int encountered = jobEncountered.incrementAndGet();
+                // the total counts job directories on disk: a home whose items are only in a persistence store has fewer
+                String progress = encountered <= jobTotal.get()
+                        ? String.format(" (%.1f%%)", 100.0f * encountered / jobTotal.get())
+                        : "";
                 long now = System.currentTimeMillis();
                 if (loadingTick == 0) {
                     loadingTick = now;
                 } else if (now - loadingTick > TICK_INTERVAL) {
-                    LOGGER.log(Level.INFO, String.format("Loading job %s (%.1f%%)", fullName, percentage));
+                    LOGGER.log(Level.INFO, "Loading job " + fullName + progress);
                     loadingTick = now;
                 }
                 String childName = childNameGenerator.itemNameFromItem(AbstractFolder.this, item);
