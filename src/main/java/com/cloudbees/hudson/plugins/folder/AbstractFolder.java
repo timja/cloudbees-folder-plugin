@@ -97,6 +97,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.model.DirectlyModifiableTopLevelItemGroup;
 import jenkins.model.Jenkins;
+import jenkins.persistence.RemoteItemGroup;
 import jenkins.model.ModelObjectWithChildren;
 import jenkins.model.ProjectNamingStrategy;
 import jenkins.model.TransientActionFactory;
@@ -144,7 +145,8 @@ public abstract class AbstractFolder<I extends TopLevelItem> extends AbstractIte
                 StaplerFallback,
                 ModelObjectWithChildren,
                 StaplerOverridable,
-                IconSpec {
+                IconSpec,
+                RemoteItemGroup {
 
     /**
      * Our logger.
@@ -399,7 +401,23 @@ public abstract class AbstractFolder<I extends TopLevelItem> extends AbstractIte
         if (items.containsKey(name)) {
             throw new IllegalArgumentException("already an item '" + name + "'");
         }
-        itemsPut(item.getName(), item);
+        itemsPut(name, item);
+    }
+
+    /**
+     * Adds a child another controller created, without reloading this folder and its other children
+     * (cloud-native Target 15). It was loaded with {@link Items#load}, which named it with {@link #getItemName}.
+     */
+    @Restricted(Beta.class)
+    @Override
+    @SuppressWarnings("unchecked")
+    public void addRemotelyCreated(@NonNull TopLevelItem item) throws IOException {
+        if (!item.getParent().equals(this)) {
+            throw new IllegalArgumentException(item + " is not a child of " + this);
+        }
+        synchronized (this) {
+            addLoadedChild((I) item, item.getName());
+        }
     }
 
     /**
@@ -431,12 +449,16 @@ public abstract class AbstractFolder<I extends TopLevelItem> extends AbstractIte
             items = loadChildren(this, getJobsDir(), item -> {
                 String fullName = item.getFullName();
                 t.setName("Loading job " + fullName);
-                float percentage = 100.0f * jobEncountered.incrementAndGet() / Math.max(1, jobTotal.get());
+                int encountered = jobEncountered.incrementAndGet();
+                // the total counts job directories on disk: a home whose items are only in a persistence store has fewer
+                String progress = encountered <= jobTotal.get()
+                        ? String.format(" (%.1f%%)", 100.0f * encountered / jobTotal.get())
+                        : "";
                 long now = System.currentTimeMillis();
                 if (loadingTick == 0) {
                     loadingTick = now;
                 } else if (now - loadingTick > TICK_INTERVAL) {
-                    LOGGER.log(Level.INFO, String.format("Loading job %s (%.1f%%)", fullName, percentage));
+                    LOGGER.log(Level.INFO, "Loading job " + fullName + progress);
                     loadingTick = now;
                 }
                 String childName = childNameGenerator.itemNameFromItem(AbstractFolder.this, item);
