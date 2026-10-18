@@ -8,7 +8,6 @@ import hudson.Util;
 import hudson.model.FreeStyleProject;
 import hudson.model.Item;
 import java.io.File;
-import jenkins.persistence.InMemoryPersistenceStore;
 import jenkins.persistence.PersistenceStore;
 import jenkins.persistence.PersistenceStoreProvider;
 import org.junit.jupiter.api.Test;
@@ -22,8 +21,7 @@ import org.jvnet.hudson.test.junit.jupiter.JenkinsSessionExtension;
  */
 final class PersistenceStoreChildLoaderTest {
 
-    static final InMemoryPersistenceStore STORE =
-            new InMemoryPersistenceStore(key -> key.matches("jobs/[^/]+(/jobs/[^/]+)*/config\\.xml"));
+    static final InMemoryStore STORE = new InMemoryStore();
 
     @RegisterExtension
     private final JenkinsSessionExtension js = new JenkinsSessionExtension();

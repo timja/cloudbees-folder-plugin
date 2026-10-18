@@ -36,8 +36,8 @@
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
     <!-- https://www.jenkins.io/doc/developer/plugin-development/choosing-jenkins-baseline/ -->
     <jenkins.baseline>2.528</jenkins.baseline>
-    <!-- cnj Target 1: built against the locally installed core with the jenkins.persistence SPI. Revert before upstreaming. -->
-    <jenkins.version>2.586-SNAPSHOT</jenkins.version>
+    <!-- built against the locally installed core with the jenkins.persistence SPI; revert before upstreaming -->
+    <jenkins.version>2.586-cnj2-all-SNAPSHOT</jenkins.version>
     <useBeta>true</useBeta>
     <no-test-jar>false</no-test-jar>
     <hpi.compatibleSinceVersion>5.2</hpi.compatibleSinceVersion>
