@@ -8,7 +8,6 @@ import static org.hamcrest.Matchers.sameInstance;
 import hudson.model.FreeStyleProject;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
-import jenkins.persistence.InMemoryPersistenceStore;
 import jenkins.persistence.PersistenceStore;
 import jenkins.persistence.PersistenceStoreProvider;
 import org.junit.jupiter.api.Test;
@@ -23,8 +22,7 @@ import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 @WithJenkins
 final class RemoteChildTest {
 
-    static final InMemoryPersistenceStore STORE =
-            new InMemoryPersistenceStore(key -> key.matches("jobs/[^/]+(/jobs/[^/]+)*/config\\.xml"));
+    static final InMemoryStore STORE = new InMemoryStore();
 
     @Test
     void childCreatedElsewhere(JenkinsRule r) throws Exception {

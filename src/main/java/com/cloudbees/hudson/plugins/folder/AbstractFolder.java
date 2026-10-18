@@ -97,10 +97,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.model.DirectlyModifiableTopLevelItemGroup;
 import jenkins.model.Jenkins;
-import jenkins.persistence.RemoteItemGroup;
 import jenkins.model.ModelObjectWithChildren;
 import jenkins.model.ProjectNamingStrategy;
 import jenkins.model.TransientActionFactory;
+import jenkins.persistence.RemoteItemGroup;
 import jenkins.security.stapler.StaplerNotDispatchable;
 import net.sf.json.JSONObject;
 import org.jenkins.ui.icon.IconSpec;
@@ -450,7 +450,7 @@ public abstract class AbstractFolder<I extends TopLevelItem> extends AbstractIte
                 String fullName = item.getFullName();
                 t.setName("Loading job " + fullName);
                 int encountered = jobEncountered.incrementAndGet();
-                // the total counts job directories on disk: a home whose items are only in a persistence store has fewer
+                // the total counts job directories on disk, which miss items only in a persistence store
                 String progress = encountered <= jobTotal.get()
                         ? String.format(" (%.1f%%)", 100.0f * encountered / jobTotal.get())
                         : "";
