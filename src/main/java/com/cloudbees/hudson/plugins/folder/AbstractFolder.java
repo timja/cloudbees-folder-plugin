@@ -421,6 +421,25 @@ public abstract class AbstractFolder<I extends TopLevelItem> extends AbstractIte
     }
 
     /**
+     * Finishes bringing this folder up to date with its configuration as another controller changed it, once its
+     * fields have been set from the stored version: {@link #onLoad} for the folder itself, as {@link #reloadThis} does,
+     * without reloading its children (which their own changes keep up to date) nor, for a {@link ComputedFolder}, its
+     * computation (cloud-native Target 15).
+     */
+    @Restricted(Beta.class)
+    @Override
+    public void onChangedElsewhere() throws IOException {
+        LOGGER.fine(() -> "onChangedElsewhere " + this);
+        boolean old = reloadingThis.get();
+        try {
+            reloadingThis.set(true);
+            onLoad(getParent(), getParent().getItemName(getRootDir(), this));
+        } finally {
+            reloadingThis.set(old);
+        }
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override

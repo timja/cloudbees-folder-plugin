@@ -47,6 +47,30 @@ final class RemoteChildTest {
         assertThat("the sibling was not reloaded", sibling.getLazyBuildMixIn()._getRuns(), sameInstance(siblingRuns));
     }
 
+    @Test
+    void folderChangedElsewhere(JenkinsRule r) throws Exception {
+        Folder f = r.createProject(Folder.class, "changed");
+        FreeStyleProject child = f.createProject(FreeStyleProject.class, "child");
+        Object childRuns = child.getLazyBuildMixIn()._getRuns(); // replaced whenever the child is (re)loaded
+        String xml = new String(STORE.read("jobs/changed/config.xml").content(), StandardCharsets.UTF_8);
+        STORE.as("other-controller")
+                .write(
+                        "jobs/changed/config.xml",
+                        xml.replaceFirst(
+                                        "(<com\\.cloudbees\\.hudson\\.plugins\\.folder\\.Folder[^>]*>)",
+                                        "$1<description>changed elsewhere</description>")
+                                .getBytes(StandardCharsets.UTF_8),
+                        PersistenceStore.ANY);
+        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(30);
+        while (!"changed elsewhere".equals(f.getDescription()) && System.nanoTime() < deadline) {
+            Thread.sleep(50);
+        }
+        assertThat(f.getDescription(), is("changed elsewhere"));
+        assertThat(r.jenkins.getItem("changed"), sameInstance(f));
+        assertThat(f.getItem("child"), sameInstance(child));
+        assertThat("the child was not reloaded", child.getLazyBuildMixIn()._getRuns(), sameInstance(childRuns));
+    }
+
     @TestExtension
     public static final class Provider implements PersistenceStoreProvider {
         @Override
